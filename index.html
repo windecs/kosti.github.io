@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Загрузка сезона...</title>
+    <script>
+        // Глобальный перехватчик ошибок: если файл на диске не найден, ловим ошибку и открываем 1index.html
+        window.onerror = function() {
+            window.location.href = "1index.html";
+            return true;
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. Автоматически определяем нужный файл по месяцу
+            const month = new Date().getMonth();
+            let targetFile = "zimaindex.html";
+            
+            if (month >= 2 && month <= 4) {
+                targetFile = "vesnaindex.html";
+            } else if (month >= 5 && month <= 7) {
+                targetFile = "letoindex.html";
+            } else if (month >= 8 && month <= 10) {
+                targetFile = "osenindex.html";
+            }
+
+            // 2. Создаем динамический тег скрипта для проверки. 
+            // Если файла targetFile не существует, браузер вызовет ошибку, и сработает window.onerror сверху!
+            const checkerScript = document.createElement("script");
+            
+            // Если файл всё-таки нашелся на диске — делаем успешный переход
+            checkerScript.onload = () => {
+                window.location.href = targetFile;
+            };
+            
+            // Если браузер выдал ошибку загрузки (файл не найден) — аварийно уходим на 1index.html
+            checkerScript.onerror = () => {
+                window.location.href = "1index.html";
+            };
+
+            checkerScript.src = targetFile;
+            document.head.appendChild(checkerScript);
+
+            // Резервный таймер: если за 0.3 секунды ничего не загрузилось, значит точно сбой папки — открываем 1index.html
+            setTimeout(() => {
+                window.location.href = "1index.html";
+            }, 300);
+        });
+    </script>
+</head>
+<body>
+    <div style="text-align: center; margin-top: 50px; font-family: sans-serif; color: #666; font-size: 18px;">
+        Проверка файлов и настройка удачи...
+    </div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎄 Новогодние 3D Кости со Снегом ✨</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: radial-gradient(circle, #1e3a8a 0%, #090d16 100%); color: #e0f2fe; margin: 0; padding: 20px; min-height: 100vh; overflow-x: hidden; position: relative; }
+        .theme-btn { position: absolute; top: 0; left: 0; width: 120px; height: 80px; background: transparent; border: none; cursor: pointer; z-index: 100; }
+        
+        /* Стили для снегопада */
+        .particle { position: fixed; top: -20px; color: #fff; font-size: 1em; font-family: Arial, sans-serif; text-shadow: 0 0 5px rgba(255,255,255,.8); user-select: none; z-index: 1000; pointer-events: none; animation: fall linear infinite; }
+        @keyframes fall { 0% { top: -20px; transform: translateX(0) rotate(0deg); opacity: 1; } 100% { top: 105vh; transform: translateX(100px) rotate(360deg); opacity: .3; } }
+        
+        .controls { margin-bottom: 40px; background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 15px; display: inline-block; border: 1px solid #38bdf8; }
+        select { padding: 8px 12px; font-size: 15px; border-radius: 8px; background: #0f172a; color: #38bdf8; border: 1px solid #38bdf8; cursor: pointer; }
+        button#roll-btn { padding: 9px 24px; font-size: 16px; background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; border-radius: 8px; margin-left: 15px; font-weight: bold; cursor: pointer; }
+        #dice-wrapper { display: flex; justify-content: center; gap: 50px; margin: 40px auto; perspective: 1000px; min-height: 140px; }
+        .scene { width: 100px; height: 100px; display: inline-block; }
+        .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 1.6s cubic-bezier(0.2, 0.8, 0.25, 1); }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-80px); } 70% { transform: translateY(20px); } }
+        .cube__face { position: absolute; width: 100px; height: 100px; background: rgba(224, 242, 254, 0.85); border: 2px solid #38bdf8; border-radius: 14px; font-size: 45px; display: flex; align-items: center; justify-content: center; backface-visibility: visible; box-shadow: inset 0 0 15px #fff; }
+        .cube__face--1 { transform: rotateY(0deg) translateZ(50px); } .cube__face--6 { transform: rotateX(180deg) translateZ(50px); } .cube__face--3 { transform: rotateY(90deg) translateZ(50px); } .cube__face--4 { transform: rotateY(-90deg) translateZ(50px); } .cube__face--2 { transform: rotateX(90deg) translateZ(50px); } .cube__face--5 { transform: rotateX(-90deg) translateZ(50px); }
+        #result { font-size: 26px; font-weight: bold; margin-top: 50px; color: #4ade80; }
+    </style>
+</head>
+<body>
+    <button class="theme-btn" onclick="goToDispatcher()"></button>
+    <h1>🎄 Новогодние 3D Кости</h1>
+    <div class="controls">
+        <label>Кости: </label>
+        <select id="dice-count" onchange="initDice()"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select>
+        <button id="roll-btn" onclick="rollAllDice()">Бросить лед!</button>
+    </div>
+    <div id="dice-wrapper"></div>
+    <div id="result">Загадайте желание!</div>
+    <script>
+        function goToDispatcher() { window.location.href = "1index.html"; }
+        const r = {1:{x:0,y:0},6:{x:180,y:0},3:{x:0,y:-90},4:{x:0,y:90},2:{x:-90,y:0},5:{x:90,y:0}};
+        
+        function createSnowfall() {
+            const numFlakes = 45;
+            for (let i = 0; i < numFlakes; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'particle';
+                flake.textContent = ['❄', '❅', '❆'][Math.floor(Math.random() * 3)];
+                flake.style.left = Math.random() * 100 + 'vw';
+                flake.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                flake.style.animationDelay = Math.random() * 5 + 's';
+                flake.style.fontSize = (Math.random() * 1.5 + 0.5) + 'em';
+                document.body.appendChild(flake);
+            }
+        }
+
+        function initDice() {
+            const c = parseInt(document.getElementById("dice-count").value), w = document.getElementById("dice-wrapper");
+            w.innerHTML = "";
+            for(let i=0;i<c;i++) {
+                w.innerHTML += `<div class="scene" id="sc-${i}"><div id="cube-${i}" class="cube">
+                <div class="cube__face cube__face--1">❄️</div><div class="cube__face cube__face--2">⛄</div>
+                <div class="cube__face cube__face--3">🦌</div><div class="cube__face cube__face--4">🎁</div>
+                <div class="cube__face cube__face--5">🎅</div><div class="cube__face cube__face--6">🎄</div></div></div>`;
+            }
+        }
+        function rollAllDice() {
+            const c = parseInt(document.getElementById("dice-count").value); let t = 0;
+            for(let i=0;i<c;i++) {
+                const cube = document.getElementById(`cube-${i}`), sc = document.getElementById(`sc-${i}`), v = Math.floor(Math.random()*6)+1; t+=v;
+                sc.style.animation = "none"; void sc.offsetWidth; sc.style.animation = "bounce 1.2s forwards";
+                cube.style.transform = `rotateX(${r[v].x + (Math.floor(Math.random()*4)+3)*360}deg) rotateY(${r[v].y + (Math.floor(Math.random()*4)+3)*360}deg)`;
+            }
+            setTimeout(() => { document.getElementById("result").innerHTML = `Вы набрали: ${t} очков`; }, 1600);
+        }
+        createSnowfall();
+        initDice();
+    </script>
+</body>
+</html>
