@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игральные Кости</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background-color: #eef2f3;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { color: #333; }
+        
+        /* Меню выбора */
+        .controls {
+            margin-bottom: 30px;
+        }
+        label {
+            font-size: 18px;
+            margin-right: 10px;
+            color: #555;
+        }
+        select, button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            outline: none;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 10px;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #218838; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Контейнер для кубиков */
+        #dice-wrapper {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+            max-width: 800px;
+            margin: 40px auto;
+            perspective: 600px; /* Эффект глубины 3D */
+        }
+
+        /* Настройки 3D кубика */
+        .scene {
+            width: 100px;
+            height: 100px;
+        }
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.3, 1);
+        }
+
+        /* Грани кубика */
+        .cube__face {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 12px;
+            font-size: 40px;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1), 0 5px 10px rgba(0,0,0,0.15);
+            box-sizing: border-box;
+        }
+
+        /* Позиционирование граней в 3D пространстве */
+        .cube__face--1 { transform: rotateY(  0deg) translateZ(50px); }
+        .cube__face--6 { transform: rotateX(180deg) translateZ(50px); }
+        .cube__face--3 { transform: rotateY( 90deg) translateZ(50px); }
+        .cube__face--4 { transform: rotateY(-90deg) translateZ(50px); }
+        .cube__face--2 { transform: rotateX( 90deg) translateZ(50px); }
+        .cube__face--5 { transform: rotateX(-90deg) translateZ(50px); }
+
+        /* Результаты */
+        #result {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 20px;
+            min-height: 35px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>3D Игральные Кости</h1>
+
+    <div class="controls">
+        <label for="dice-count">Сколько костей?</label>
+        <select id="dice-count" onchange="initDice()">
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select>
+        <button id="roll-btn" onclick="rollAllDice()">Бросить!</button>
+    </div>
+
+    <div id="dice-wrapper"></div>
+
+    <div id="result">Выберите количество и бросьте кости!</div>
+
+    <script>
+        // Координаты вращения для точного показа нужной грани кубика
+        const faceRotations = {
+            1: { x: 0,   y: 0 },
+            6: { x: 180, y: 0 },
+            3: { x: 0,   y: -90 },
+            4: { x: 0,   y: 90 },
+            2: { x: -90, y: 0 },
+            5: { x: 90,  y: 0 }
+        };
+
+        // Создание кубиков на экране при изменении настроек меню
+        function initDice() {
+            const count = parseInt(document.getElementById('dice-count').value);
+            const wrapper = document.getElementById('dice-wrapper');
+            wrapper.innerHTML = ''; // Очищаем старые кубики
+
+            for (let i = 0; i < count; i++) {
+                const scene = document.createElement('div');
+                scene.className = 'scene';
+                scene.innerHTML = `
+                    <div id="cube-${i}" class="cube">
+                        <div class="cube__face cube__face--1">1</div>
+                        <div class="cube__face cube__face--2">2</div>
+                        <div class="cube__face cube__face--3">3</div>
+                        <div class="cube__face cube__face--4">4</div>
+                        <div class="cube__face cube__face--5">5</div>
+                        <div class="cube__face cube__face--6">6</div>
+                    </div>
+                `;
+                wrapper.appendChild(scene);
+            }
+            document.getElementById('result').textContent = 'Готовы к броску';
+        }
+
+        // Логика броска всех кубиков
+        function rollAllDice() {
+            const count = parseInt(document.getElementById('dice-count').value);
+            const button = document.getElementById('roll-btn');
+            button.disabled = true; // Блокируем кнопку на время анимации
+
+            let totalSum = 0;
+
+            for (let i = 0; i < count; i++) {
+                const cube = document.getElementById(`cube-${i}`);
+                const randomValue = Math.floor(Math.random() * 6) + 1;
+                totalSum += randomValue;
+
+                // Добавляем случайное количество полных оборотов для реалистичности
+                const extraTurnsX = (Math.floor(Math.random() * 3) + 2) * 360;
+                const extraTurnsY = (Math.floor(Math.random() * 3) + 2) * 360;
+
+                const finalX = faceRotations[randomValue].x + extraTurnsX;
+                const finalY = faceRotations[randomValue].y + extraTurnsY;
+
+                // Запускаем 3D вращение
+                cube.style.transform = `rotateX(${finalX}deg) rotateY(${finalY}deg)`;
+            }
+
+            // Ждем окончания CSS анимации (1.5 секунды)
+            setTimeout(() => {
+                document.getElementById('result').textContent = `Сумма: ${totalSum}`;
+                button.disabled = false;
+            }, 1500);
+        }
+
+        // Инициализация при первой загрузке страницы
+        initDice();
+    </script>
+
+</body>
+</html>
